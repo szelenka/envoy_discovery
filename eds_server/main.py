@@ -69,6 +69,17 @@ v2_request = api.model('req', {
   "resource_names": fields.List(fields.String(default="myservice"))
 })
 
+
+@api.route('/v2/discovery:listeners')
+class Listeners(Resource):
+    def post(self):
+        '''Get hosts for service v2'''
+        data = json.loads(request.data)
+        print(" Inbound v2 request for clusters.  POST payload: " + str(data))
+        return
+
+
+@api.route('/v2/discovery:clusters')
 @api.route('/v2/discovery:endpoints')
 class Servicesv2(Resource):
     @api.doc('get_service_v2')
@@ -77,14 +88,15 @@ class Servicesv2(Resource):
     def post(self):
         '''Get hosts for service v2'''
         data = json.loads(request.data)
-        print " Inbound v2 request for discovery.  POST payload: " + str(data)
+        print(" Inbound v2 request for endpoints.  POST payload: " + str(data))
         resp = ''
         try:
           id = data['node']["id"]
           cluster = data['node']["cluster"]
-          resource_names = data["resource_names"]          
-          for r in resource_names:
-              if (DAO.services.has_key(r)):
+          # resource_names = data["resource_names"]
+          # for r in resource_names:
+          for r in DAO.services.keys():
+              if (r in DAO.services.keys()):
                 svc = DAO.services[r]
                 endpoints =  []       
                 for host in svc.get("hosts"):
@@ -122,6 +134,7 @@ class Servicesv2(Resource):
                       }
                    ] 
                  }
+              print(" outbound v2 request for endpoints.  POST payload: " + str(resp))
               return resp
           api.abort(400, "Service Name not provided")        
         except KeyError: 
@@ -136,7 +149,7 @@ class Servicesv1(Resource):
     @api.marshal_with(services)    
     def get(self, service_name):
         '''Get hosts for service v1'''
-        print " Inbound v2 request for discovery.  GET service_name: " + service_name        
+        print(" Inbound v2 request for discovery.  GET service_name: " + service_name)
         try:
           return DAO.services[service_name]        
         except KeyError: 
